@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.PaymentDAO">
+	<select id="getPaymentsforHost" parameterType="Payment"
+		resultType="Payment">
+		select p.*,
+		m.member_name as member_name
+		from
+		(select * from
+		payment where
+		pay_year=#{pay_year} and
+		pay_month=#{pay_month} and
+		house_id=#{house_id}) p,
+		(select * from member where
+		member_belongto=#{house_id}) m
+		where p.pay_for = m.member_id(+)
+		order by
+		p.pay_for
+	</select>
+	<select id="getPaymentsforResident" parameterType="Payment"
+		resultType="Payment">
+		select p.*, m.member_name from
+		(select * from
+		payment
+		where
+		pay_year=#{pay_year} and
+		pay_month=#{pay_month} and
+		house_id=#{house_id}) p,
+		(select member_name, member_id from member
+		where
+		member_id=#{pay_for}) m
+		where p.pay_for=m.member_id
+		order by
+		pay_category
+	</select>
+
+	<insert id="insertPayment" parameterType="Payment">
+		insert into
+		payment(pay_id, house_id, pay_category, pay_year,
+		pay_month,
+		pay_amount, pay_inputdate, pay_for
+		) values(payment_seq.nextval,
+		#{house_id}, #{pay_category},
+		#{pay_year}, #{pay_month}, #{pay_amount},
+		sysdate , #{pay_for})
+	</insert>
+	<delete id="deletePayment" parameterType="int">
+		delete payment where
+		pay_id=#{pay_id}
+	</delete>
+	<update id="updatePayment" parameterType="Payment">
+		update payment set
+		pay_amount=#{pay_amount}
+		where pay_id=#{pay_id}
+	</update>
+	<select id="getInsertedCategory" parameterType="Payment"
+		resultType="String">
+		select pay_category
+		from
+		payment where pay_for=#{pay_for} and
+		pay_year=#{pay_year} and pay_month=#{pay_month} and
+		house_id=#{house_id}
+	</select>
+	<select id="getPaymentsforReport" parameterType="Payment"
+		resultType="Payment">
+		select sum(pay_amount) as pay_amount, pay_category,
+		pay_year, pay_month
+		from
+		payment where
+		pay_year=#{pay_year} and
+		pay_month=#{pay_month} and
+		house_id=#{house_id}
+		group by pay_category,
+		pay_year, pay_month
+	</select>
+	<delete id="clearPayment" parameterType="String">
+		delete from payment where pay_for=#{member_id}
+	</delete>
+</mapper>

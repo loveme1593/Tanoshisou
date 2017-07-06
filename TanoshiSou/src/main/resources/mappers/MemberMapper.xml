@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.MemberDAO">
+	<!-- 회원 가입 -->
+	<insert id="insertMember" parameterType="Member">
+		insert into member 
+		(MEMBER_NUM, MEMBER_ID , MEMBER_NAME ,
+		MEMBER_NICKNAME,
+		MEMBER_PASSWORD, MEMBER_TYPE , MEMBER_PHONE,
+		MEMBER_EMAIL,
+		MEMBER_BELONGTO , MEMBER_PASSWORD_CHECK_Q ,MEMBER_PASSWORD_CHECK_A)
+		values(member_seq.nextval, #{member_id} ,#{member_name},
+		#{member_nickname}, #{member_password}, 'General',
+		#{member_phone},
+		#{member_email}, 'General', #{member_password_check_q},
+		#{member_password_check_a})
+	</insert>
+	<!-- 회원 프로필 사진 관리 -->
+	<insert id="insertMemberProFile" parameterType="MemberFile">
+		insert into
+		member_file values(#{member_file_id}, #{member_upload_file_name},
+		#{member_id})
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="login" resultType="Member">
+		select * from member where
+		member_id = #{0} and member_password = #{1}
+	</select>
+	<!-- 아이디 확인 -->
+	<select id="checkMemberId" resultType="String">
+		select member_id from
+		member where member_id = #{0}
+	</select>
+	<select id="checkMemberEmail" resultType="String">
+		select member_email
+		from member where member_email = #{0}
+	</select>
+	<select id="checkMemberPhone" resultType="String">
+		select member_phone
+		from member where member_phone = #{0}
+	</select>
+	<!-- 회원정보 가져오기 -->
+	<select id="getMember" resultType="Member">
+		select * from member where
+		member_id = #{0}
+	</select>
+	<!-- 회원 프로필 사진 블러오기 -->
+	<select id="getMemberProfile" resultType="MemberFile">
+		select * from
+		member_file where member_id=#{0}
+	</select>
+	<!-- 회원 사진 지우기 -->
+	<delete id="deleteMemberProfile" parameterType="String">
+		delete from
+		member_file where member_file_id = #{member_file_id}
+	</delete>
+	<!-- 회원정보 업로드 -->
+	<update id="updateMember" parameterType="Member">
+		update member set member_name=#{member_name}
+		<if test="member_nickname != null">,
+			member_nickname=#{member_nickname}
+		</if>
+		<if test="member_password != null">,
+			member_password=#{member_password}
+		</if>
+		<if test="member_phone != null">, member_phone = #{member_phone}
+		</if>
+		<if test="member_email != null">, member_email = #{member_email}
+		</if>
+		<if test="member_password_check_q != 0">,
+			member_password_check_q=#{member_password_check_q}
+		</if>
+		<if test="member_password_check_a != ''">,
+			member_password_check_a=#{member_password_check_a}
+		</if>
+		where member_id = #{member_id}
+	</update>
+	<update id="applyHouse" parameterType="String">
+		update member set
+		member_belongto=#{1}, member_type='Pending' where member_id=#{0}
+	</update>
+	<update id="grantResident" parameterType="String">
+		update member set
+		member_type='Resident' where member_id=#{member_id}
+	</update>
+	<update id="declineResident" parameterType="String">
+		update member set
+		member_type='General', member_belongto='General' where
+		member_id=#{member_id}
+	</update>
+	<update id="insertHouse" parameterType="House">
+		update member set
+		member_type='Pending' where member_id=#{house_owner}
+	</update>
+	<update id="acceptHouse" parameterType="String">
+		update member set
+		member_type='Host', member_belongto=#{0} where
+		member_id=#{1}
+	</update>
+	<select id="getPendingMembers" parameterType="String"
+		resultType="Member">
+		select * from member where member_belongto=#{house_id} and
+		member_type='Pending'
+	</select>
+	<select id="getResidents" parameterType="String" resultType="Member">
+		select * from member where member_belongto=#{house_id} and
+		member_type='Resident'
+	</select>
+	<select id="getMemberId" parameterType="String" resultType="String">
+		select
+		member_id from member where member_phone=#{0} and
+		member_name=#{1}
+	</select>
+</mapper>

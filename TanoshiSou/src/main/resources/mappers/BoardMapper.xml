@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.BoardDAO">
+	<insert id="insertBoard" parameterType="Board">
+		insert into board(
+		house_id,board_id,board_title,board_nickname,board_inputdate,
+		board_content,board_member_id,board_category
+		)
+		values(
+		#{house_id},
+		board_seq.nextval,
+		#{board_title},
+		#{board_nickname},
+		sysdate,
+		#{board_content},
+		#{board_member_id},
+		#{board_category}
+		)
+	</insert>
+
+	<select id="getBoard" parameterType="_int" resultType="Board">
+		select *
+		from board b, board_file f where
+		b.board_id=f.board_id(+)
+		and
+		b.board_id=#{board_id}
+	</select>
+
+	<select id="getBoardId" parameterType="map" resultType="_int">
+		select
+		board_id from (select board_id from board
+		where
+		board_member_id=#{board_member_id}
+		and house_id=#{house_id}
+		order by
+		board_inputdate desc
+		)
+		where rownum=1
+	</select>
+
+	<select id="getInputDate" parameterType="_int" resultType="String">
+		select board_inputdate
+		from board where board_id=#{board_id}
+	</select>
+
+	<delete id="deleteBoard" parameterType="_int">
+		delete board where
+		board_id=#{board_id}
+	</delete>
+
+	<update id="updateBoard" parameterType="Board">
+		update board set
+		board_title=#{board_title}, board_content=#{board_content},
+		board_inputdate=sysdate
+		where board_id=#{board_id}
+	</update>
+
+	<update id="upHits" parameterType="_int">
+		update board set
+		board_hits=board_hits+1
+		where board_id=#{board_id}
+	</update>
+
+	<update id="upReplyCount" parameterType="_int">
+		update board set
+		board_reply_num=board_reply_num+1 where board_id=#{board_id}
+	</update>
+
+	<update id="downReplyCount" parameterType="_int">
+		update board set
+		board_reply_num=board_reply_num-1 where board_id=#{board_id}
+	</update>
+
+	<select id="getTotalPosts" resultType="_int" parameterType="map">
+		<!-- hashmap 이용해서 검색하기 -->
+		<choose>
+			<when test="searchType=='board_title'">
+				select count(*) from board
+				where
+				board_category=#{board_category}
+				and
+				board_title
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+			</when>
+			<when test="searchType=='board_nickname'">
+				select count(*) from board
+				where
+				board_category=#{board_category}
+				and
+				board_nickname
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+			</when>
+			<when test="searchType=='board_content'">
+				select count(*) from board
+				where
+				board_category=#{board_category}
+				and
+				board_content
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+			</when>
+			<when test="searchType==''">
+				select count(*) from board
+				where
+				board_category=#{board_category}
+				and
+				house_id=#{house_id}
+			</when>
+		</choose>
+	</select>
+
+	<select id="getBoards" resultType="Board" parameterType="Map">
+		<choose>
+			<when test="searchType=='board_title'">
+				select* from board
+				where
+				board_title
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+				and
+				board_category=#{board_category}
+				order by
+				board_inputdate
+				desc
+			</when>
+			<when test="searchType=='board_nickname'">
+				select* from board
+				where
+				board_nickname
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+				and
+				board_category=#{board_category}
+				order by
+				board_inputdate
+				desc
+			</when>
+			<when test="searchType=='board_content'">
+				select* from board
+				where
+				board_content
+				like
+				'%'||#{searchText}||'%'
+				and
+				house_id=#{house_id}
+				and
+				board_category=#{board_category}
+				order by
+				board_inputdate
+				desc
+			</when>
+			<when test="searchType==''">
+				select*
+				from board
+				where
+				board_category=#{board_category}
+				and
+				house_id=#{house_id}
+				order by
+				board_inputdate desc
+			</when>
+		</choose>
+	</select>
+</mapper>

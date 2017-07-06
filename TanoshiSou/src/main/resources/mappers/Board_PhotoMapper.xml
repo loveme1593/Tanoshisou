@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.itmaster.tanoshi.dao.Board_PhotoDAO">
+	<select id="getPhotos" resultType="Board" parameterType="String">
+		select*
+		from board b,
+		board_file f
+		where
+		b.board_id=f.board_id
+		and
+		b.board_category='photo'
+		and
+		house_id=#{house_id}
+		order by
+		b.board_inputdate desc
+	</select>
+
+	<select id="getPhoto" resultType="Board">
+		select* from board b,
+		board_file f
+		where
+		b.board_id=f.board_id
+		and
+		b.board_id=#{board_id}
+	</select>
+
+	<insert id="insertPhoto" parameterType="Board">
+		insert into board(
+		house_id,board_id,board_title,board_nickname,
+		board_content,board_member_id,board_category
+		)
+		values(
+		#{house_id},
+		board_seq.nextval,
+		#{board_title},
+		#{board_nickname},
+		#{board_content},
+		#{board_member_id},
+		#{board_category}
+		)
+	</insert>
+
+	<insert id="insertBoard_files" parameterType="Board">
+		insert into
+		board_file
+		values(
+		#{board_file_id},
+		#{board_upload_file_name},
+		#{board_id}
+		)
+	</insert>
+
+	<delete id="deletePhoto_files" parameterType="_int">
+		delete board_file
+		where board_id=#{board_id}
+	</delete>
+
+	<update id="updatePhoto" parameterType="Board">
+		update board set
+		board_title=#{board_title},
+		board_inputdate=sysdate,
+		board_content=#{board_content}
+		where board_id=#{board_id}
+	</update>
+
+	<update id="updatePhotoFile" parameterType="Board">
+		update board_file set
+		board_file_id=#{board_file_id},
+		board_upload_file_name=#{board_upload_file_name}
+		where
+		board_id=#{board_id}
+	</update>
+</mapper>

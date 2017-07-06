@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias alias="House" type="com.itmaster.tanoshi.vo.House" />
+		<typeAlias alias="Payment" type="com.itmaster.tanoshi.vo.Payment" />
+		<typeAlias alias="Member" type="com.itmaster.tanoshi.vo.Member" />
+		<typeAlias alias="MemberFile" type="com.itmaster.tanoshi.vo.MemberFile" />
+		<typeAlias alias="HouseFile" type="com.itmaster.tanoshi.vo.HouseFile" />
+		<typeAlias alias="MemberDetail" type="com.itmaster.tanoshi.vo.MemberDetail" />
+		<typeAlias alias="Board" type="com.itmaster.tanoshi.vo.Board" />
+		<typeAlias alias="Reply" type="com.itmaster.tanoshi.vo.Reply" />
+		<typeAlias alias="Planning" type="com.itmaster.tanoshi.vo.Planning" />
+		<typeAlias alias="Vote" type="com.itmaster.tanoshi.vo.Vote" />
+
+	</typeAliases>
+	<!-- 매퍼 파일 위치 설정 -->
+	<mappers>
+		<mapper resource="mappers/HouseMapper.xml" />
+		<mapper resource="mappers/PaymentMapper.xml" />
+		<mapper resource="mappers/BoardMapper.xml" />
+		<mapper resource="mappers/ReplyMapper.xml" />
+		<mapper resource="mappers/Board_PhotoMapper.xml" />
+		<mapper resource="mappers/PlanningMapper.xml" />
+		<mapper resource="mappers/MemberMapper.xml" />
+		<mapper resource="mappers/MemberDetailMapper.xml" />
+		<mapper resource="mappers/VoteMapper.xml" />
+	</mappers>
+
+</configuration>

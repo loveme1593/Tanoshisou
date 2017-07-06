@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.HouseDAO">
+
+	<select id="checkHouseID" parameterType="String" resultType="String">
+		select HOUSE_ID from
+		house where HOUSE_ID=#{house_id}
+	</select>
+
+	<select id="getAcceptedHouses" resultType="House">
+		select * from house h
+		where HOUSE_STATUS='ACCEPTED'
+	</select>
+	<insert id="insertHouse" parameterType="House">
+		insert into
+		house(HOUSE_ID, HOUSE_NUM, HOUSE_NAME, HOUSE_ADDRESS,
+		HOUSE_PHONE,
+		HOUSE_AVAILABLE_ROOM, HOUSE_INTRODUCE,
+		HOUSE_AVAILABLE_EMAIL,
+		HOUSE_OWNER, HOUSE_STATUS, HOUSE_GPS_X,
+		HOUSE_GPS_Y, HOUSE_AREA, HOUSE_SCORE_ACTIVE, HOUSE_SCORE_PERSONAL,
+		HOUSE_SCORE_CLEAN
+		<if test="house_area!= null ">, HOUSE_OPTION</if>
+		)
+		values(
+		#{house_id}, HOUSE_SEQ.nextval,
+		#{house_name},
+		#{house_address},
+		#{house_phone},
+		#{house_available_room},
+		#{house_introduce},
+		#{house_available_email},
+		#{house_owner}, 'PENDING',
+		#{house_GPS_X},
+		#{house_GPS_Y}, #{house_area},
+		#{house_score_active},#{house_score_personal}, #{house_score_clean}
+		<if test="house_area!= null ">, #{house_option}</if>
+		)
+	</insert>
+	<update id="acceptHouse" parameterType="String">
+		update HOUSE SET
+		HOUSE_STATUS = 'ACCEPTED' WHERE HOUSE_ID=#{house_id}
+	</update>
+	<delete id="deleteHouse" parameterType="String">
+		delete House where
+		HOUSE_ID=#{house_id}
+	</delete>
+	<select id="getHouse" parameterType="String" resultType="House">
+		select *
+		from house where house_id=#{house.id}
+	</select>
+
+	<select id="getHouses" resultType="House"> select * from house
+	</select>
+
+	<update id="updateHouse" parameterType="House">
+		update HOUSE SET
+		HOUSE_NAME = #{house_name},
+		HOUSE_ADDRESS =	#{house_address},
+		HOUSE_PHONE =#{house_phone},
+		HOUSE_AVAILABLE_ROOM = #{house_available_room},
+		HOUSE_INTRODUCE =#{house_introduce},
+		HOUSE_AVAILABLE_EMAIL =#{house_available_email},
+		HOUSE_GPS_X=#{house_GPS_X}, HOUSE_GPS_Y=#{house_GPS_Y},
+		HOUSE_AREA=#{house_area}, HOUSE_AGE=#{house_age}
+		<if test="house_option!= null ">, HOUSE_OPTION =#{house_option}</if>
+		where
+		HOUSE_ID=#{house_id}
+		<!-- house_option!=null 로 변수명 수정 -->
+	</update>
+	<select id="searchHouses" parameterType="String" resultType="House">
+		SELECT a.* FROM
+		(select * from house where
+		UPPER(HOUSE_ADDRESS) LIKE
+		'%'||upper(#{keyword})||'%' or
+		upper(HOUSE_INTRODUCE) LIKE
+		'%'||upper(#{keyword})||'%' or
+		upper(HOUSE_NAME) LIKE
+		'%'||upper(#{keyword})||'%') a where a.HOUSE_STATUS='ACCEPTED'
+	</select>
+	<select id="searchDetailedHouses" parameterType="House"
+		resultType="House">
+		SELECT a.* FROM
+		(select * from house where
+		<choose>
+			<when test="house_age==20 or house_age==30">
+				HOUSE_AGE between #{house_age} and #{house_age}+9
+			</when>
+			<otherwise>
+				HOUSE_AGE>=#{house_age}
+			</otherwise>
+		</choose>
+		and
+		<choose>
+			<when test="house_area==10">
+				HOUSE_AREA&lt;=#{house_area}
+			</when>
+			<when test="house_area==15">
+				HOUSE_AREA between 10 and 15
+			</when>
+			<otherwise>
+				HOUSE_AREA>=#{house_age}
+			</otherwise>
+		</choose>
+		)a where a.HOUSE_STATUS='ACCEPTED'
+	</select>
+	<insert id="insertFile" parameterType="String">
+		insert into
+		house_file(HOUSE_ID, HOUSE_UPLOAD_FILE_NAME, HOUSE_FILE_ID)
+		values(#{0}, #{1}, #{2})
+	</insert>
+
+	<delete id="deleteFile" parameterType="String">
+		delete house_file where
+		HOUSE_ID=#{house_id}
+	</delete>
+	<!-- 유저로 하우스 가져오기 -->
+	<select id="getHouseByUserId" resultType="House">
+		select * from house
+		where HOUSE_ID = #{0}
+	</select>
+	<!-- 하우스 파일 이름 가져오기 -->
+	<select id="getHouseImageFile" resultType="HouseFile">
+		select * from
+		house_file where HOUSE_ID = #{0}
+	</select>
+	<!-- 하우스 목록 업데이트 용 -->
+	<select id="getHouseListAtUpdate" resultType="House">
+		select house_name,
+		house_id from house
+	</select>
+	<update id="setHouseScore" parameterType="String">
+		update house set
+		house_score_active=
+		-- 해당 쉐어하우스 스코어(활동성)의 평균
+		(select avg(score_active)
+		from member_detail where member_id in
+		(select member_id from member
+		where member_belongto=#{house_id} and
+		member_type in ('Host',
+		'Resident')))
+		-- 청결성 평균
+		, house_score_clean = (select avg(score_clean)
+		from member_detail where
+		member_id in
+		(select member_id from member
+		where member_belongto=#{house_id} and
+		member_type in ('Host',
+		'Resident')))
+		-- 개인성 평균
+		, house_score_personal = (select
+		avg(score_personal) from member_detail
+		where member_id in
+		(select
+		member_id from member
+		where member_belongto=#{house_id} and
+		member_type
+		in ('Host', 'Resident')))
+		where house_id=#{house_id}
+	</update>
+	<update id="setHouseAge" parameterType="String">
+		update house set
+		house_age=
+		(select avg(a.age) from
+		(select d.member_id,
+		to_number(to_char(sysdate,'YYYY'))-nvl(to_number(to_char(detail_birthday,'YYYY')),1997)
+		age
+		from member_detail d, (select member_id from member
+		where
+		member_belongto=#{house_id} and member_type in ('Resident', 'Host') )
+		r
+		where d.member_id(+)=r.member_id) a)
+		where house_id=#{house_id} and
+		house_status='ACCEPTED'
+	</update>
+	<select id="getActiveResult" parameterType="int" resultType="House">
+		select rownum, d.* from (select * from house
+		where house_score_active
+		<choose>
+			<when test="score &lt; 50">
+				&lt;50
+			</when>
+			<otherwise>
+			&gt;&#61;50
+			</otherwise>
+		</choose>
+		and
+		house_status='ACCEPTED'
+		order by house_score_active
+		<choose>
+			<when test="score &lt; 50">
+				asc
+			</when>
+			<otherwise>
+				desc
+			</otherwise>
+		</choose>)
+		d
+		where
+		rownum&lt;=10
+	</select>
+	<select id="getPersonalResult" parameterType="int" resultType="House">
+		select rownum, d.* from (select * from house
+		where house_score_personal
+		<choose>
+			<when test="score &lt; 50">
+				&lt;50
+			</when>
+			<otherwise>
+			&gt;&#61;50
+			</otherwise>
+		</choose>
+		and
+		house_status='ACCEPTED'
+		order by house_score_personal
+		<choose>
+			<when test="score &lt; 50">
+				asc
+			</when>
+			<otherwise>
+				desc
+			</otherwise>
+		</choose>
+		) d
+		where
+		rownum&lt;=10
+	</select>
+	<select id="getCleanResult" parameterType="int" resultType="House">
+		select rownum, d.* from (select * from house
+		where house_score_clean
+		<choose>
+			<when test="score &lt; 50">
+				&lt;50
+			</when>
+			<otherwise>
+			&gt;&#61;50
+			</otherwise>
+		</choose>
+		and
+		house_status='ACCEPTED'
+		order by house_score_clean
+		<choose>
+			<when test="score &lt; 50">
+				asc
+			</when>
+			<otherwise>
+				desc
+			</otherwise>
+		</choose>)
+		d
+		where
+		rownum&lt;=10
+	</select>
+</mapper>

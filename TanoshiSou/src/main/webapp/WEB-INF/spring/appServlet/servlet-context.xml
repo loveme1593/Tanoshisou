@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing 
+		infrastructure -->
+
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving 
+		up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<resources mapping="/images/**" location="/resources/images/" />
+	<resources mapping="/calendar/**" location="/resources/calendar/" />
+	<resources mapping="/css/**" location="/resources/css/" />
+	<resources mapping="/fonts/**" location="/resources/fonts/" />
+	<resources mapping="/images/**" location="/resources/images/" />
+	<resources mapping="/js/**" location="/resources/js/" />
+	<resources mapping="/cal/**" location="/resources/cal/" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources 
+		in the /WEB-INF/views directory -->
+	<beans:bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+
+	<context:component-scan base-package="com.itmaster.tanoshi" />
+
+	<beans:bean id="loginInterceptor"
+		class="com.itmaster.tanoshi.interceptor.loginInterceptor" />
+	<beans:bean id="houseInterceptor"
+		class="com.itmaster.tanoshi.interceptor.houseInterceptor" />
+	<beans:bean id="adminInterceptor"
+		class="com.itmaster.tanoshi.interceptor.adminInterceptor" />
+	<beans:bean id="scoreInterceptor"
+		class="com.itmaster.tanoshi.interceptor.scoreInterceptor" />
+	<interceptors>
+		<interceptor>
+			<!-- 로그인 여부를 확인하는 인터셉터 -->
+			<mapping path="/recommend/" />
+			<mapping path="/board/getReplies" />
+			<mapping path="/board/insertReply" />
+			<mapping path="/board/deleteReply" />
+			<mapping path="/board/updateReply" />
+			<mapping path="/member/update" />
+			<mapping path="/member/detail" />
+			<mapping path="/member/memberDetailUpdate" />
+			<mapping path="/member/profile" />
+<!-- 			<mapping path="/member/findInfo" />
+			<mapping path="/member/findEmail" />
+			<mapping path="/member/findId" /> -->
+			<mapping path="/member/ShowProfile" />
+			<!-- 위의 경로들은 다음의 인터셉터를 경유한다 -->
+			<!-- 인터셉터에 걸리면 해당 페이지 요청한다면 로그인 화면으로 강제이동 -->
+			<beans:ref bean="loginInterceptor" />
+		</interceptor>
+		<interceptor>
+			<mapping path="/board/" />
+			<mapping path="/board/insert/" />
+			<mapping path="/board/insertBoard/" />
+			<mapping path="/board/getBoard/" />
+			<mapping path="/board/deleteBoard/" />
+			<mapping path="/board/updateBoard/" />
+			<mapping path="/planning/" />
+			<mapping path="/planning/show" />
+			<mapping path="/planning/save" />
+			<mapping path="/planning/del" />
+			<mapping path="/photo/" />
+			<mapping path="/photo/insertPhoto" />
+			<mapping path="/photo/updatePhoto" />
+			<mapping path="/photo/updateReply" />
+			<mapping path="/photo/download" />
+			<mapping path="/photo/getPhoto" />
+			<mapping path="/photo/deletePhoto" />
+			<mapping path="/photo/getReplies" />
+			<mapping path="/photo/insertReply" />
+			<mapping path="/photo/deleteReply" />
+			<mapping path="/payment/" />
+			<mapping path="/payment/get" />
+			<mapping path="/payment/toExcel" />
+			<mapping path="/planning/" />
+			<mapping path="/vote/" />
+			<mapping path="/vote/voteShow" />
+			<mapping path="/vote/voteSave" />
+			<mapping path="/board/" />
+			<mapping path="/board/insert" />
+			<mapping path="/board/delete" />
+			<mapping path="/board/update" />
+			<beans:ref bean="houseInterceptor" />
+		</interceptor>
+		<interceptor>
+			<mapping path="/house/getHouseInfo" />
+			<mapping path="/admin/" />
+			<mapping path="/admin/insert" />
+			<mapping path="/admin/getHouses" />
+			<mapping path="/admin/accept" />
+			<mapping path="/admin/delete" />
+			<beans:ref bean="adminInterceptor" />
+		</interceptor>
+		<interceptor>
+		<!-- 점수 데이터가 없는 경우 테스트 화면으로 보냄 -->
+			<mapping path="/recommend/result" />
+			<mapping path="/house/insert" />
+			<mapping path="/house/apply" />
+			<beans:ref bean="scoreInterceptor" />
+		</interceptor>
+	</interceptors>
+</beans:beans>

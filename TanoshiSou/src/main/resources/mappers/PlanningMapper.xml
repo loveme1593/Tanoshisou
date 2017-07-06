@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.PlanningDAO">
+
+	<!-- 1)캘린더 일 정 월별 불러오기 월별 반복처리위해 쿼리변경 -->
+	<select id="listCal" resultType="Planning" parameterType="map">
+ <![CDATA[
+  select 
+	  plan_id
+	  , house_id
+	  , member_id 
+	  , text 
+	  , to_char(start_date, 'yyyy-mm-dd hh24:mi') start_date 
+	  , to_char(end_date, 'yyyy-mm-dd hh24:mi') end_date
+	  , content
+	  , repeat_type
+	  , to_char(repeat_end_date, 'yyyy-mm-dd') repeat_end_date
+	  , is_dbdata
+	  , alarm_yn
+	  , alarm_val
+	  , category
+ from planning
+ where repeat_type != 'none'
+ and house_id = #{house_id}
+ union
+ select 
+	  plan_id 
+	  , house_id
+	  , member_id 
+	  , text 
+	  , to_char(start_date, 'yyyy-mm-dd hh24:mi') start_date 
+	  , to_char(end_date, 'yyyy-mm-dd hh24:mi') end_date
+	  , content
+	  , repeat_type
+	  , to_char(repeat_end_date, 'yyyy-mm-dd') repeat_end_date
+	  , is_dbdata
+	  , alarm_yn
+	  , alarm_val
+	  , category
+ from planning
+ where start_date >= add_months(to_date(#{date}, 'yyyy-mm-dd'), -1)
+ and end_date <= add_months(last_day(to_date(#{date}, 'yyyy-mm-dd')) +1, 1)
+ and repeat_type = 'none'
+ and house_id = #{house_id}
+ ]]>
+	</select>
+	<!-- 2)캘린더 일정 저장하기 -->
+	<insert id="saveCal" parameterType="Planning">
+		insert into planning
+		(
+		plan_id
+		, house_id
+		, member_id
+		, text
+		, start_date
+		, end_date
+		, content
+		, repeat_type
+		<if test="repeat_end_date != null and repeat_end_date != ''">
+			, repeat_end_date
+		</if>
+		, is_dbdata
+		<if test="!alarm_val.equals('none')">
+			, alarm_yn
+			, alarm_val
+		</if>
+		, category
+		)
+		values
+		(
+		planning_seq.nextval
+		, #{house_id}
+		, #{member_id}
+		, #{text}
+		, to_date(substr(#{start_date},1,24), 'DY MON DD YYYY
+		HH24:MI:SS','NLS_DATE_LANGUAGE = American')
+		, to_date(substr(#{end_date},1,24), 'DY MON DD YYYY
+		HH24:MI:SS','NLS_DATE_LANGUAGE = American')
+		, #{content}
+		, #{repeat_type}
+		<if test="repeat_end_date != null  and repeat_end_date != ''">
+			, to_date(#{repeat_end_date} || ' 00:00:00', 'YYYY-MM-DD hh24:mi:ss')
+			+ 1
+		</if>
+		, 'T'
+		<if test="!alarm_val.equals('none')">
+			, 'T'
+			, #{alarm_val}
+		</if>
+		, #{category}
+		)
+	</insert>
+	<!-- 3)캘린더 일정 삭제하기 -->
+	<delete id="delCal" parameterType="int">
+		delete from planning
+		where plan_id = #{plan_id}
+	</delete>
+
+	<!-- id에 대한 이벤트 존재여부 구하기 -->
+	<select id="selectEvent" parameterType="string" resultType="Planning">
+		select
+		plan_id
+		, text
+		, to_char(start_date, 'DY MON DD YYYY HH24:MI:SS','NLS_DATE_LANGUAGE =
+		American') start_date
+		, to_char(end_date, 'DY MON DD YYYY HH24:MI:SS','NLS_DATE_LANGUAGE =
+		American') end_date
+		, content
+		, repeat_type
+		, to_char(repeat_end_date, 'yyyy-mm-dd') repeat_end_date
+		, is_dbdata
+		, alarm_yn
+		, alarm_val
+		, category
+		from planning where plan_id = #{plan_id}
+	</select>
+
+	<!-- 일정 수정 -->
+	<update id="updateEvent" parameterType="Planning">
+		update planning
+		set
+		text = #{text}
+		, content = #{content}
+		, start_date =
+		to_date(substr(#{start_date},1,24), 'DY MON DD YYYY
+		HH24:MI:SS','NLS_DATE_LANGUAGE = American')
+		, end_date =
+		to_date(substr(#{end_date},1,24), 'DY MON DD YYYY
+		HH24:MI:SS','NLS_DATE_LANGUAGE = American')
+		, repeat_type =
+		#{repeat_type}
+		<if test="repeat_end_date != null and repeat_end_date != ''">
+			, repeat_end_date = to_date(#{repeat_end_date} || ' 00:00:00',
+			'YYYY-MM-DD hh24:mi:ss')
+		</if>
+		<choose>
+			<when test="!alarm_val.equals('none')">
+				, alarm_yn = 'T'
+				, alarm_val = #{alarm_val}
+			</when>
+			<when test="alarm_val.equals('none')">
+				, alarm_yn = 'F'
+			</when>
+		</choose>
+		, category = #{category}
+		where
+		plan_id = #{plan_id}
+	</update>
+
+	<!-- 최신 글 번호 구하기 (반복등록시 필요) -->
+	<select id="selectLatestEventNum" resultType="string">
+		select plan_id
+		from planning
+		where rownum = 1
+		order by plan_id desc
+	</select>
+
+	<!-- insert이후 다음날 구하기 (반복등록시 필요) -->
+	<select id="selectNextDate" parameterType="string" resultType="string">
+		select
+		to_char(
+		to_date(#{check_day}
+		, 'yyyy-mm-dd hh24:mi:ss') + 1
+		, 'yyyy-mm-dd hh24:mi:ss') next_day
+		from dual
+	</select>
+
+	<!-- 알림시간 얻기 -->
+	<select id="selectAlarmTime" parameterType="String" resultType="string">
+		select to_char (start_date - alarm_val/(24*60), 'ss mi hh24 dd mm ?
+		yyyy') alarm_time
+		from planning
+		where alarm_yn = 'T'
+		and plan_id = #{plan_id}
+	</select>
+	<delete id="clearPlanning" parameterType="String">
+		delete planning where member_id=#{member_id}
+	</delete>
+</mapper>

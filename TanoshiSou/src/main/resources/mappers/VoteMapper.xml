@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.VoteDAO">
+	<!-- 1)투표조회 -->
+	<select id="listVote" resultType="Vote" parameterType="map">
+		select *
+		from Vote
+		where data_type = #{data_type} and pid=#{pid}
+	</select>
+
+	<!-- 2)투표 등록 -->
+	<insert id="saveVote" parameterType="Vote">
+		insert into Vote(
+		voteid,
+		data_type,
+		pid,
+		member_id,
+		decision,
+		votetitle
+		)values (
+		vote_seq.nextval
+		,
+		#{data_type}
+		, #{pid}
+		, #{member_id}
+		, #{decision}
+		, #{votetitle}
+		)
+	</insert>
+
+	<!-- 3)투표여부체크 -->
+	<select id="checkVote" parameterType="Vote" resultType="int">
+		select
+		count(*) from vote
+		where data_type =#{data_type} and pid= #{pid} and
+		member_id =#{member_id}
+	</select>
+
+	<!-- 4)투표삭제 -->
+	<delete id="deleteVote" parameterType="Vote">
+		DELETE FROM vote
+		WHERE
+		data_type =#{data_type} and pid= #{pid} and member_id =#{member_id}
+	</delete>
+	<delete id="clearVote" parameterType="String">
+		DELETE vote
+		WHERE
+		data_type ='planning' and member_id =#{member_id}
+	</delete>
+</mapper>

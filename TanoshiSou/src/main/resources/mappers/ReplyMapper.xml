@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.ReplyDAO">
+
+    <!-- 수정을 위한 댓글 하나만 가져오기 -->
+    <select id="getReply" resultType="String" parameterType="int">
+    select reply_text from reply where reply_num=#{reply_num}
+    </select>
+
+	<select id="getReplies" resultType="Reply" parameterType="int">
+		select* from reply where board_id=#{board_id}
+		order by reply_inputdate
+		desc
+	</select>
+
+	<select id="getReplyNum" parameterType="int" resultType="int">
+		select
+		count(*) from reply where board_id=#{board_id}
+	</select>
+
+	<insert id="insertReply" parameterType="Reply">
+		insert into reply values(
+		reply_seq.nextval,#{reply_nickname},sysdate,#{reply_text},#{board_id}
+		)
+	</insert>
+
+	<delete id="deleteReplies" parameterType="int">
+		delete reply where
+		board_id=#{board_id}
+	</delete>
+
+	<delete id="deleteReply" parameterType="int">
+		delete reply where
+		reply_num=#{reply_num}
+	</delete>
+
+	<update id="updateReply" parameterType="Reply">
+		update reply set
+		reply_text=#{reply_text},
+		reply_inputdate=sysdate
+		where
+		reply_num=#{reply_num}
+	</update>
+
+	<select id="getBoardId" parameterType="int" resultType="int">
+		select
+		board_id from reply where reply_num=#{reply_num}
+	</select>
+</mapper>

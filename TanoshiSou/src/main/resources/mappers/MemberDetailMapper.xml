@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itmaster.tanoshi.dao.MemberDetailDAO">
+	<insert id="insertMemberDetail" parameterType="MemberDetail">
+		insert into
+		member_detail(member_id, DETAIL_JOB_TITLE, DETAIL_BIRTHDAY,
+		DETAIL_GENDER,
+		DETAIL_ADDRESS, DETAIL_HOBBY, DETAIL_INTRODUCE,
+		DETAIL_RELIGION,
+		DETAIL_BLOODTYPE)
+		values(#{member_id}, #{detail_job_title},
+		to_date(#{detail_birthday}, 'YYYY-MM-DD'),
+		#{detail_gender},
+		#{detail_address}, #{detail_hobby}, #{detail_introduce},
+		#{detail_religion},
+		#{detail_bloodtype})
+	</insert>
+	<select id="getMemberDetail" resultType="MemberDetail">
+		select
+		member_id
+		,
+		detail_gender
+		, to_char(detail_birthday,'YYYY-MM-DD') detail_birthday
+		,
+		detail_job_title
+		, detail_hobby
+		, detail_address
+		, detail_bloodtype
+		,
+		detail_introduce
+		, detail_religion
+		, score_personal
+		, score_clean
+		,
+		score_active
+		from member_detail where member_id = #{member_id}
+	</select>
+
+	<!-- 정보 업테이트하기 -->
+	<update id="updateMemberDetail" parameterType="MemberDetail">
+		update member_detail set
+		<if test="detail_gender != null "> detail_gender = #{detail_gender}</if>
+		<if test="detail_birthday != null ">,detail_birthday = #{detail_birthday}</if>
+		<if test="detail_job_title != null ">,detail_job_title= #{detail_job_title}</if>
+		<if test="detail_hobby != null ">,detail_hobby= #{detail_hobby}</if>
+		<if test="detail_address != null ">,detail_address = #{detail_address}</if>
+		<if test="detail_bloodtype!= null ">,detail_bloodtype= #{detail_bloodtype}</if>
+		<if test="detail_introduce != null ">,detail_introduce = #{detail_introduce} </if>
+		<if test="detail_religion != null ">,detail_religion = #{detail_religion} </if>
+		where member_id=#{member_id}
+	</update>
+	<select id="getMemberDetailByHouse" parameterType="String"
+		resultType="MemberDetail">
+		select * from member_detail d,
+		(select member_id from member where member_belongto=#{house_id}
+		and member_type in ('Host' , 'Resident')) h
+		where d.member_id = h.member_id
+	</select>
+	<update id="setScore" parameterType="MemberDetail">
+		update member_detail set
+		score_personal = #{score_personal},
+		score_clean = #{score_clean},
+		score_active = #{score_active}
+		where member_id = #{member_id}
+	</update>
+</mapper>
